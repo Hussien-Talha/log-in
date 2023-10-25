@@ -49,24 +49,24 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Simple Text Saver</h1>
-    <form id="login-form">
-      <input type="text" id="username" placeholder="Enter your username" required>
-      <input type="password" id="password" placeholder="Enter your password" required>
-      <button type="submit" id="login-button">Log In</button>
-      <button type="button" id="signup-button">Sign Up</button>
-      <p id="login-message" class="message"></p>
-      <p id="login-error" class="error"></p>
-    </form>
-    <form id="text-form" h  idden>
-      <textarea id="text-area" placeholder="Write your text here"></textarea>
-      <button type="submit" id="save-button">Save</button>
-      <button type="button" id="logout-button">Log Out</button>
-      <p id="text-message" class="message"></p>
-      <p id="text-error" class="error"></p>
-    </form>
-  </div>
+     <div class="container">
+         <h1>Simple Text Saver</h1>
+          <form id="login-form">
+             <input type="text" id="username" placeholder="Enter your username" required>
+              <input type="password" id="password" placeholder="Enter your password" required>
+               <button type="submit" id="login-button">Log In</button>
+                <button type="button" id="signup-button">Sign Up</button>
+                 <p id="login-message" class="message"></p>
+                  <p id="login-error" class="error"></p>
+                 </form> <form id="text-form" hidden> 
+                    <!-- Fixed the typo here -->
+                     <textarea id="text-area" placeholder="Write your text here"></textarea> 
+                     <button type="submit" id="save-button">Save</button>
+                      <button type="button" id="logout-button">Log Out</button>
+                       <p id="text-message" class="message"></p> 
+                       <p id="text-error" class="error"></p>
+                     </form> 
+                    </div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-analytics.js";
@@ -168,33 +168,64 @@ function logout() {
     textError.textContent = "You are not logged in.";
   }
 }
-
 // Add event listeners to the buttons
-loginButton.addEventListener("click", function(event) {
-  event.preventDefault();
-  let username = usernameInput.value;
-  let password = passwordInput.value;
-  login(username, password);
-});
+ loginButton.addEventListener("click", function(event) {
+     event.preventDefault();
+      let username = usernameInput.value;
+       let password = passwordInput.value;
+        login(username, password);
+     });
 
 signupButton.addEventListener("click", function(event) {
-  event.preventDefault();
-  let username = usernameInput.value;
-  let password = passwordInput.value;
-  signup(username, password);
-});
+     event.preventDefault();
+      let username = usernameInput.value;
+       let password = passwordInput.value;
+        signup(username, password);
+     });
 
 saveButton.addEventListener("click", function(event) {
-  event.preventDefault();
-  let text = textArea.value;
-  save(text);
-});
+     event.preventDefault();
+      let text = textArea.value; 
+      save(text);
+     });
 
 logoutButton.addEventListener("click", function(event) {
-  event.preventDefault();
-  logout();
-});
+     event.preventDefault();
+      logout(); 
+    });
 
+// A function to save the database to the Realtime Database
+ // Added this function
+
+  function saveDb() {
+     set(ref(db, 'users'),
+      db.users);
+       set(ref(db, 'texts'),
+        db.texts);
+     }
+
+// A function to load the database from the Realtime Database
+ // Added this function
+
+  function loadDb() {
+     get(ref(db, 'users'))
+     .then((snapshot) => {
+         if (snapshot.exists()) {
+             db.users = snapshot.val();
+             } else {
+                 db.users = {};
+                 } });
+                  get(ref(db, 'texts')).then((snapshot) => {
+                     if (snapshot.exists()) {
+                         db.texts = snapshot.val();
+                         } else {
+                             db.texts = {};
+                             } });
+                             }
+
+// Load the database at the beginning of the script
+ // Added this line
+  loadDb();
   </script>
 </body>
 </html>
