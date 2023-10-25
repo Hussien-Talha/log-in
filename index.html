@@ -68,42 +68,36 @@
     </form>
   </div>
   <script>
+// Import MongoClient
+const { MongoClient } = require("mongodb");
 
-    // A simple mock database using localStorage
-    let db = {
-      users: JSON.parse(localStorage.getItem("users")) || {},
-      texts: JSON.parse(localStorage.getItem("texts")) || {}
-    };
+// Replace the uri string with your MongoDB deployment's connection string.
+const uri = "mongodb+srv://hussien:Crazy296@log-in.xnq1tc4.mongodb.net/";
 
-    // Save the database to localStorage
-    function saveDb() {
-      localStorage.setItem("users", JSON.stringify(db.users));
-      localStorage.setItem("texts", JSON.stringify(db.texts));
-    }
+// Create a new MongoClient
+const client = new MongoClient(uri);
 
-    // Get the DOM elements
-    let loginForm = document.getElementById("login-form");
-    let textForm = document.getElementById("text-form");
-    let usernameInput = document.getElementById("username");
-    let passwordInput = document.getElementById("password");
-    let loginButton = document.getElementById("login-button");
-    let signupButton = document.getElementById("signup-button");
-    let loginMessage = document.getElementById("login-message");
-    let loginError = document.getElementById("login-error");
-    let textArea = document.getElementById("text-area");
-    let saveButton = document.getElementById("save-button");
-    let logoutButton = document.getElementById("logout-button");
-    let textMessage = document.getElementById("text-message");
-    let textError = document.getElementById("text-error");
+// The database to use
+const dbName = "text-saver";
 
-    // A variable to store the current user
-    let currentUser = null;
-
-    // A function to log in a user
-    function login(username, password) {
-      
-      // Check if the username and password are valid
-      if (db.users[username] && db.users[username] === password) {
+async function main() {
+  try {
+    // Connect the client to the server
+    await client.connect();
+    console.log("Connected successfully to server");
+    // Get the database
+    const db = client.db(dbName);
+    // Get the collection
+    const collection = db.collection("texts");
+    // Get the user input
+    let username = usernameInput.value;
+    let password = passwordInput.value;
+    let text = textArea.value;
+    // Check if the user exists
+    let user = await collection.findOne({ username: username });
+    if (user) {
+      // Check if the password matches
+      if (user.password === password) {
         // Log in the user and show the text form
         currentUser = username;
         loginForm.hidden = true;
@@ -111,82 +105,63 @@
         loginMessage.textContent = "You have logged in as " + username + ".";
         loginError.textContent = "";
         // Load the user's text from the database if any
-        textArea.value = db.texts[username] || "";
+        textArea.value = user.text || "";
       } else {
         // Show an error message
         loginError.textContent = "Invalid username or password.";
       }
-    }
-
-    // A function to sign up a user
-    function signup(username, password) {
-      // Check if the username is available
-      if (db.users[username]) {
-        // Show an error message
-        loginError.textContent = "Username already taken.";
-      } else {
-        // Create a new user and log in
-        db.users[username] = password;
-        saveDb();
-        login(username, password);
-      }
-    }
-
-    // A function to save the user's text
-    function save(text) {
-      // Check if the user is logged in
-      if (currentUser) {
-        // Save the text to the database and show a message
-        db.texts[currentUser] = text;
-        saveDb();
-        textMessage.textContent = "Your text has been saved.";
-      } else {
-        // Show an error message
-        textError.textContent = "You are not logged in.";
-      }
-    }
-
-    // A function to log out the user
-    function logout() {
-      // Check if the user is logged in
-      if (currentUser) {
-        // Log out the user and show the login form
-        currentUser = null;
-        loginForm.hidden = false;
-        textForm.hidden = true;
-        loginMessage.textContent = "";
-        textMessage.textContent = "";
-      } else {
-        // Show an error message
-        textError.textContent = "You are not logged in.";
-      }
-    }
-
-    // Add event listeners to the buttons
-    loginButton.addEventListener("click", function(event) {
-      event.preventDefault();
-      let username = usernameInput.value;
-      let password = passwordInput.value;
+    } else {
+      // Create a new user and log in
+      await collection.insertOne({ username: username, password: password, text: "" });
       login(username, password);
-    });
+    }
+  } finally {
+    // Close the connection
+    await client.close();
+  }
+}
 
-    signupButton.addEventListener("click", function(event) {
-      event.preventDefault();
-      let username = usernameInput.value;
-      let password = passwordInput.value;
-      signup(username, password);
-    });
+// A function to save the user's text
+async function save(text) {
+  try {
+    // Connect the client to the server
+    await client.connect();
+    console.log("Connected successfully to server");
+    // Get the database
+    const db = client.db(dbName);
+    // Get the collection
+    const collection = db.collection("texts");
+    // Check if the user is logged in
+    if (currentUser) {
+      // Save the text to the database and show a message
+      await collection.updateOne({ username: currentUser }, { $set: { text: text } });
+      textMessage.textContent = "Your text has been saved.";
+    } else {
+      // Show an error message
+      textError.textContent = "You are not logged in.";
+    }
+  } finally {
+    // Close the connection
+    await client.close();
+  }
+}
 
-    saveButton.addEventListener("click", function(event) {
-      event.preventDefault();
-      let text = textArea.value;
-      save(text);
-    });
+// Add event listeners to the buttons
+loginButton.addEventListener("click", function(event) {
+  event.preventDefault();
+  main().catch(console.error);
+});
 
-    logoutButton.addEventListener("click", function(event) {
-      event.preventDefault();
-      logout();
-    });
+saveButton.addEventListener("click", function(event) {
+  event.preventDefault();
+  let text = textArea.value;
+  save(text).catch(console.error);
+});
+
+logoutButton.addEventListener("click", function(event) {
+  event.preventDefault();
+  logout();
+});
   </script>
 </body>
 </html>
